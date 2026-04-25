@@ -14,8 +14,8 @@ class OllamaTranslator(TranslatorPort):
         # El "System Prompt": Le damos un rol claro y reglas estrictas para que no nos devuelva basura
         prompt = (
             "You are a professional literary translator. "
-            "Translate the following text from Spanish to English. "
-            "Respond ONLY with the translated English text, no explanations, no quotes, no markdown.\n\n"
+            "Translate the following text from English to Spanish. "
+            "Respond ONLY with the translated Spanish text, no explanations, no quotes, no markdown.\n\n"
             f"Original text: {text}"
         )
 

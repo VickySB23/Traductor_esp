@@ -1,30 +1,41 @@
 import argparse
 import sys
 from traductor.infrastructure.extractors.bs4_extractor import BS4Extractor
+from traductor.infrastructure.extractors.epub_extractor import EpubExtractor
 from traductor.infrastructure.translators.ollama_client import OllamaTranslator
+from traductor.infrastructure.database.sqlite_glossary import SQLiteGlossary
 from traductor.application.use_cases.translate_book import TranslateBookUseCase
 
 def run():
-    # 1. Configuramos la interfaz de terminal
     parser = argparse.ArgumentParser(description="Traductor de documentos 100% local y confidencial.")
-    parser.add_argument("input", help="Ruta del archivo HTML original")
+    parser.add_argument("input", help="Ruta del archivo original (HTML o EPUB)")
     parser.add_argument("output", help="Ruta donde se guardará el archivo traducido")
-    parser.add_argument("--model", default="llama3", help="Modelo de Ollama a utilizar (ej. llama3, mistral)")
+    parser.add_argument("--model", default="llama3", help="Modelo de Ollama a utilizar")
     
     args = parser.parse_args()
 
     print(f"[*] Preparando entorno aislado para: {args.input}")
     
-    # 2. COMPOSITION ROOT: Instanciamos las infraestructuras reales
-    extractor = BS4Extractor()
+    # --- COMPOSITION ROOT ---
+    # 1. Instanciamos el extractor correcto según la extensión
+    if args.input.lower().endswith(".epub"):
+        extractor = EpubExtractor()
+    else:
+        extractor = BS4Extractor()
+        
+    # 2. Instanciamos el motor de IA y la Base de Datos
     translator = OllamaTranslator(model_name=args.model)
+    glossary = SQLiteGlossary() # Se guardará en data/glossary.sqlite3
     
-    # 3. Inyectamos las dependencias en nuestro Caso de Uso (El cerebro)
-    use_case = TranslateBookUseCase(extractor=extractor, translator=translator)
+    # 3. Inyectamos TODAS las dependencias en nuestro Caso de Uso
+    use_case = TranslateBookUseCase(
+        extractor=extractor, 
+        translator=translator,
+        glossary=glossary
+    )
 
-    # 4. Ejecutamos el flujo
     print(f"[*] Conectando con motor local de IA ({args.model})...")
-    print("[*] Procesando bloques de texto. Esto puede demorar dependiendo del hardware...")
+    print("[*] Procesando bloques de texto. Usando Memoria de Traducción (Glosario)...")
     
     try:
         use_case.execute(input_path=args.input, output_path=args.output)
