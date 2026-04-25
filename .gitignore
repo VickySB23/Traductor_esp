@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# --- Datos Confidenciales del Traductor ---
+data/
+.env
+*.sqlite3
